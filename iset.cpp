@@ -83,8 +83,28 @@ Node* merge(Node* rl1, Node* rl2) {
 		return root_list;
 	else if ((rl1 != nullptr) && (rl2 == nullptr))
 		root_list = rl1;
-	else if ((rl1 == nullptr) && (rl2 != nullptr))
-		root_list = rl2;
+	else if ((rl1 == nullptr) && (rl2 != nullptr)) {
+		Node* iter2 = rl2;
+		Node* chng2 = nullptr;
+		vector<Node*> merged(1000, nullptr);
+
+		while (iter2 != nullptr) {
+			chng2 = iter2->_right_brother;
+			add_to_merged(merged, iter2);
+			iter2 = chng2;
+		}
+
+		for (size_t i = 0; i < merged.size(); ++i) {
+			if ((root_list == nullptr) && (merged[i] != nullptr)) {
+				root_list = merged[i];
+				iter2 = root_list;
+			}
+			else if (merged[i] != nullptr) {
+				iter2->_right_brother = merged[i];
+				iter2 = iter2->_right_brother;
+			}
+		}
+	}
 	else {
 		vector<Node*> merged(1000, nullptr);
 		Node* iter1 = rl1;
@@ -185,29 +205,39 @@ int   get_min(Node* root_list) {
 	return min;
 }
 
-int   delete_min(Node* root_list) {
-	if (root_list == nullptr) throw;
+int   delete_min(Node** root_list) {
+	if (*root_list == nullptr) throw;
 
-	Node* prev     = root_list;
-	Node* cur      = root_list;
-	Node* mnd_prev = nullptr;
-	Node* min_node = root_list;
+	Node* prev     = nullptr;
+	Node* cur      = *root_list;
+	Node* min_prev = nullptr;
+	Node* min_node = *root_list;
 	int key = 0;
 
 	while (cur->_right_brother != nullptr) {
 		prev = cur;
 		cur = cur->_right_brother;
 		if (min_node->_key > cur->_key) {
-			mnd_prev = prev;
+			min_prev = prev;
 			min_node = cur;
 		}
 	}
 
-	mnd_prev->_right_brother = min_node->_right_brother;
-	grow(min_node->_left_child);
-	root_list = merge(root_list, min_node->_left_child);
-	key = min_node->_key;
-	delete_node(min_node);
+	if (min_node == *root_list) {
+		Node* to_attach = min_node->_left_child;
+		grow(to_attach);
+		*root_list = (*root_list)->_right_brother;
+		key = min_node->_key;
+		delete_node(min_node);
+		*root_list = merge(*root_list, to_attach);
+	}
+	else {
+		min_prev->_right_brother = min_node->_right_brother;
+		grow(min_node->_left_child);
+		*root_list = merge(*root_list, min_node->_left_child);
+		key = min_node->_key;
+		delete_node(min_node);
+	}
 
 	return key;
 }
@@ -228,6 +258,7 @@ void  add_to_merged(vector<Node*>& merged, Node* node) {
 		merged.resize(node->_degree + 2);
 
 	if (merged[node->_degree] == nullptr) {
+		node->_right_brother = nullptr;
 		merged[node->_degree] = node;
 	}
 	else {

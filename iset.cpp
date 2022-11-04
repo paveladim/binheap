@@ -1,9 +1,13 @@
 #include "iset.h"
 
-Node* create_node(const int& key = 0) {
+Node* create_node(const int& key) {
 	Node* n = new Node;
 	n->_key = key;
 	n->_degree = 0;
+	n->_parent        = nullptr;
+	n->_right_brother = nullptr;
+	n->_left_child	  = nullptr;
+	n->_right_child	  = nullptr;
 	return n;
 }
 
@@ -18,29 +22,42 @@ void  delete_node(Node* node) {
 }
 
 Node*  link_trees(Node* r1, Node* r2) {
-	if ((r1 == nullptr) || (r2 == nullptr)) return;
+	if ((r1 == nullptr) || (r2 == nullptr)) return nullptr;
+	if (r1->_degree != r2->_degree) return nullptr;
 
 	if (r1->_key < r2->_key) {
 		++r1->_degree;
-		Node* ex_rc = r1->_right_child;
+		Node* ex_lc = r1->_left_child;
 
-		r1->_right_child = r2;
-		r2->_parent      = r1;
+		r1->_left_child = r2;
+		if (r1->_right_brother == r2) r1->_right_brother = nullptr;
+		r2->_parent     = r1;
 		
-		if (ex_rc != nullptr)
-			ex_rc->_right_brother = r2;
+		r2->_right_brother = ex_lc;
+
+		Node* iter = r1->_left_child;
+		while (iter->_right_brother != nullptr)
+			iter = iter->_right_brother;
+
+		r1->_right_child = iter;
 
 		return r1;
 	}
 	else {
 		++r2->_degree;
-		Node* ex_rc = r2->_right_child;
+		Node* ex_lc = r2->_left_child;
 
-		r2->_right_child = r1;
-		r1->_parent = r2;
+		r2->_left_child = r1;
+		if (r2->_right_brother == r1) r2->_right_brother = nullptr;
+		r1->_parent     = r2;
 
-		if (ex_rc != nullptr)
-			ex_rc->_right_brother = r1;
+		r1->_right_brother = ex_lc;
+
+		Node* iter = r2->_left_child;
+		while (iter->_right_brother != nullptr)
+			iter = iter->_right_brother;
+
+		r2->_right_child = iter;
 
 		return r2;
 	}
@@ -72,9 +89,11 @@ Node* merge(Node* rl1, Node* rl2) {
 		vector<Node*> merged(1000, nullptr);
 		Node* iter1 = rl1;
 		Node* iter2 = rl2;
+		Node* chng1 = nullptr;
+		Node* chng2 = nullptr;
 		Node* temp = nullptr;
 
-		while ((iter1->_right_brother != nullptr) && (iter2->_right_brother != nullptr)) {
+		while ((iter1 != nullptr) && (iter2 != nullptr)) {
 			if (iter1->_degree < iter2->_degree) {
 				add_to_merged(merged, iter1);
 				iter1 = iter1->_right_brother;
@@ -84,19 +103,21 @@ Node* merge(Node* rl1, Node* rl2) {
 				iter2 = iter2->_right_brother;
 			}
 			else {
-				temp = link_trees(iter1, iter2);
-				add_to_merged(merged, iter2);
+				chng1 = iter1;
+				chng2 = iter2;
 				iter1 = iter1->_right_brother;
 				iter2 = iter2->_right_brother;
+				temp = link_trees(chng1, chng2);
+				add_to_merged(merged, temp);
 			}
 		}
 
-		while (iter1->_right_brother != nullptr) {
+		while (iter1 != nullptr) {
 			add_to_merged(merged, iter1);
 			iter1 = iter1->_right_brother;
 		}
 
-		while (iter2->_right_brother != nullptr) {
+		while (iter2 != nullptr) {
 			add_to_merged(merged, iter2);
 			iter2 = iter2->_right_brother;
 		}
@@ -213,4 +234,12 @@ void  add_to_merged(vector<Node*>& merged, Node* node) {
 		node = link_trees(node, nd);
 		add_to_merged(merged, node);
 	}
+}
+
+Node* create_heap(const vector<int> src) {
+	Node* root_list = nullptr;
+	for (auto& elem : src)
+		root_list = insert(root_list, elem);
+
+	return root_list;
 }

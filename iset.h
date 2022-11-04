@@ -16,7 +16,12 @@ Node* merge(Node* rl1, Node* rl2);
 int   get_min(Node* root_list);
 int   delete_min(Node* root_list);
 
+void  clear_heap(Node* root_list);
+void  recursive_clear(Node* node);
+
 void  grow(Node* to_grow);
 void  add_to_merged(vector<Node*>& merged, Node* node);
+
+Node* create_heap(const vector<int> src);
 
 #endif

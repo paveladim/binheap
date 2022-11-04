@@ -49,9 +49,7 @@ Node*  link_trees(Node* r1, Node* r2) {
 Node*  insert(Node* root_list, const int& key) {
 	if (root_list != nullptr) {
 		Node* n = create_node(key);
-		n->_right_brother = root_list;
-		root_list = n;
-		root_list = heapify(root_list);
+		root_list = merge(root_list, n);
 	}
 	else {
 		Node* n = create_node(key);
@@ -61,34 +59,61 @@ Node*  insert(Node* root_list, const int& key) {
 	return root_list;
 }
 
-Node*  heapify(Node* root_list) {
-	if (root_list != nullptr) {
-		Node* iter1 = root_list;
-		Node* iter2 = nullptr;
+Node* merge(Node* rl1, Node* rl2) {
+	Node* root_list = nullptr;
 
-		while (iter1->_right_brother != nullptr) {
-			iter1 = iter1->_right_brother;
-		}
+	if ((rl1 == nullptr) && (rl2 == nullptr))
+		return root_list;
+	else if ((rl1 != nullptr) && (rl2 == nullptr))
+		root_list = rl1;
+	else if ((rl1 == nullptr) && (rl2 != nullptr))
+		root_list = rl2;
+	else {
+		vector<Node*> merged(1000, nullptr);
+		Node* iter1 = rl1;
+		Node* iter2 = rl2;
+		Node* temp = nullptr;
 
-		Node* tail = iter1;
-		Node* nn   = nullptr;
-		iter1      = root_list;
-
-		while (iter1->_right_brother != nullptr) {
-			iter2 = iter1;
-			iter1 = iter1->_right_brother;
-
-			if (iter1->_degree == iter2->_degree) {
-				nn = link_trees(iter1, iter2);
-				tail->_right_brother = nn;
-				root_list = tail;
-				tail = tail->_right_brother;
+		while ((iter1->_right_brother != nullptr) && (iter2->_right_brother != nullptr)) {
+			if (iter1->_degree < iter2->_degree) {
+				add_to_merged(merged, iter1);
+				iter1 = iter1->_right_brother;
+			}
+			else if (iter1->_degree > iter2->_degree) {
+				add_to_merged(merged, iter2);
+				iter2 = iter2->_right_brother;
+			}
+			else {
+				temp = link_trees(iter1, iter2);
+				add_to_merged(merged, iter2);
+				iter1 = iter1->_right_brother;
+				iter2 = iter2->_right_brother;
 			}
 		}
 
-		return root_list;
+		while (iter1->_right_brother != nullptr) {
+			add_to_merged(merged, iter1);
+			iter1 = iter1->_right_brother;
+		}
+
+		while (iter2->_right_brother != nullptr) {
+			add_to_merged(merged, iter2);
+			iter2 = iter2->_right_brother;
+		}
+
+		for (size_t i = 0; i < merged.size(); ++i) {
+			if ((root_list == nullptr) && (merged[i] != nullptr)) {
+				root_list = merged[i];
+				iter1 = root_list;
+			}
+			else if (merged[i] != nullptr) {
+				iter1->_right_brother = merged[i];
+				iter1 = iter1->_right_brother;
+			}
+		}
 	}
-	else return root_list;
+
+	return root_list;
 }
 
 void clear_heap(Node* root_list) {
@@ -144,6 +169,7 @@ int   delete_min(Node* root_list) {
 	Node* cur      = root_list;
 	Node* mnd_prev = nullptr;
 	Node* min_node = root_list;
+	int key = 0;
 
 	while (cur->_right_brother != nullptr) {
 		prev = cur;
@@ -155,10 +181,36 @@ int   delete_min(Node* root_list) {
 	}
 
 	mnd_prev->_right_brother = min_node->_right_brother;
+	grow(min_node->_left_child);
+	root_list = merge(root_list, min_node->_left_child);
+	key = min_node->_key;
+	delete_node(min_node);
 
-
-	return min_node->_key;
+	return key;
 }
 
-// метод grow, чтобы дети взрослели и помещались в корневой список
-// метод insert для вставки узла в конец
+void grow(Node* to_grow) {
+	if (to_grow == nullptr) return;
+
+	Node* iter = to_grow;
+	iter->_parent = nullptr;
+	while (iter->_right_brother != nullptr) {
+		iter = iter->_right_brother;
+		iter->_parent = nullptr;
+	}
+}
+
+void  add_to_merged(vector<Node*>& merged, Node* node) {
+	if (merged.size() - 1 < node->_degree)
+		merged.resize(node->_degree + 2);
+
+	if (merged[node->_degree] == nullptr) {
+		merged[node->_degree] = node;
+	}
+	else {
+		Node* nd = merged[node->_degree];
+		merged[node->_degree] = nullptr;
+		node = link_trees(node, nd);
+		add_to_merged(merged, node);
+	}
+}

@@ -1,7 +1,7 @@
 #ifndef ISET_H
 #define ISET_H
 
-#include <list>
+#include <vector>
 #include "Node.h"
 
 using namespace std;
@@ -11,9 +11,12 @@ void  delete_node(Node* node);
 Node* link_trees(Node* r1, Node* r2);
 
 Node* insert(Node* root_list, const int& key);
-Node* heapify(Node* root_list);
+Node* merge(Node* rl1, Node* rl2);
 
 int   get_min(Node* root_list);
 int   delete_min(Node* root_list);
+
+void  grow(Node* to_grow);
+void  add_to_merged(vector<Node*>& merged, Node* node);
 
 #endif

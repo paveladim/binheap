@@ -113,13 +113,15 @@ Node* merge(Node* rl1, Node* rl2) {
 		}
 
 		while (iter1 != nullptr) {
+			chng1 = iter1->_right_brother;
 			add_to_merged(merged, iter1);
-			iter1 = iter1->_right_brother;
+			iter1 = chng1;
 		}
 
 		while (iter2 != nullptr) {
+			chng2 = iter2->_right_brother;
 			add_to_merged(merged, iter2);
-			iter2 = iter2->_right_brother;
+			iter2 = chng2;
 		}
 
 		for (size_t i = 0; i < merged.size(); ++i) {

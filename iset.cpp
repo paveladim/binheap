@@ -4,35 +4,38 @@ Node* create_node(const int& key) {
 	Node* n = new Node;
 	n->_key = key;
 	n->_degree = 0;
-	n->_parent        = nullptr;
+	n->_parent = nullptr;
 	n->_right_brother = nullptr;
-	n->_left_child	  = nullptr;
-	n->_right_child	  = nullptr;
+	n->_left_child = nullptr;
+	n->_right_child = nullptr;
 	return n;
 }
 
 void  delete_node(Node* node) {
 	if (node == nullptr) return;
 
-	node->_left_child    = nullptr;
-	node->_right_child   = nullptr;
+	node->_left_child = nullptr;
+	node->_right_child = nullptr;
 	node->_right_brother = nullptr;
-	node->_parent        = nullptr;
+	node->_parent = nullptr;
 	delete node;
 }
 
-Node*  link_trees(Node* r1, Node* r2) {
-	if ((r1 == nullptr) || (r2 == nullptr)) return nullptr;
-	if (r1->_degree != r2->_degree) return nullptr;
+Node* link_trees(Node* r1, Node* r2) {
+	if ((r1 == nullptr) && (r2 == nullptr)) return nullptr;
+	if ((r1 != nullptr) && (r2 == nullptr)) return r1;
+	if ((r1 == nullptr) && (r2 != nullptr)) return r2;
+
+	if (r1->_degree != r2->_degree) throw;
 
 	if (r1->_key < r2->_key) {
-		++r1->_degree;
+		++(r1->_degree);
 		Node* ex_lc = r1->_left_child;
 
 		r1->_left_child = r2;
 		if (r1->_right_brother == r2) r1->_right_brother = nullptr;
-		r2->_parent     = r1;
-		
+		r2->_parent = r1;
+
 		r2->_right_brother = ex_lc;
 
 		Node* iter = r1->_left_child;
@@ -44,12 +47,12 @@ Node*  link_trees(Node* r1, Node* r2) {
 		return r1;
 	}
 	else {
-		++r2->_degree;
+		++(r2->_degree);
 		Node* ex_lc = r2->_left_child;
 
 		r2->_left_child = r1;
 		if (r2->_right_brother == r1) r2->_right_brother = nullptr;
-		r1->_parent     = r2;
+		r1->_parent = r2;
 
 		r1->_right_brother = ex_lc;
 
@@ -63,7 +66,7 @@ Node*  link_trees(Node* r1, Node* r2) {
 	}
 }
 
-Node*  insert(Node* root_list, const int& key) {
+Node* insert(Node* root_list, const int& key) {
 	if (root_list != nullptr) {
 		Node* n = create_node(key);
 		root_list = merge(root_list, n);
@@ -84,26 +87,7 @@ Node* merge(Node* rl1, Node* rl2) {
 	else if ((rl1 != nullptr) && (rl2 == nullptr))
 		root_list = rl1;
 	else if ((rl1 == nullptr) && (rl2 != nullptr)) {
-		Node* iter2 = rl2;
-		Node* chng2 = nullptr;
-		vector<Node*> merged(1000, nullptr);
-
-		while (iter2 != nullptr) {
-			chng2 = iter2->_right_brother;
-			add_to_merged(merged, iter2);
-			iter2 = chng2;
-		}
-
-		for (size_t i = 0; i < merged.size(); ++i) {
-			if ((root_list == nullptr) && (merged[i] != nullptr)) {
-				root_list = merged[i];
-				iter2 = root_list;
-			}
-			else if (merged[i] != nullptr) {
-				iter2->_right_brother = merged[i];
-				iter2 = iter2->_right_brother;
-			}
-		}
+		root_list = rl2;
 	}
 	else {
 		vector<Node*> merged(1000, nullptr);
@@ -112,25 +96,6 @@ Node* merge(Node* rl1, Node* rl2) {
 		Node* chng1 = nullptr;
 		Node* chng2 = nullptr;
 		Node* temp = nullptr;
-
-		while ((iter1 != nullptr) && (iter2 != nullptr)) {
-			if (iter1->_degree < iter2->_degree) {
-				add_to_merged(merged, iter1);
-				iter1 = iter1->_right_brother;
-			}
-			else if (iter1->_degree > iter2->_degree) {
-				add_to_merged(merged, iter2);
-				iter2 = iter2->_right_brother;
-			}
-			else {
-				chng1 = iter1;
-				chng2 = iter2;
-				iter1 = iter1->_right_brother;
-				iter2 = iter2->_right_brother;
-				temp = link_trees(chng1, chng2);
-				add_to_merged(merged, temp);
-			}
-		}
 
 		while (iter1 != nullptr) {
 			chng1 = iter1->_right_brother;
@@ -153,6 +118,32 @@ Node* merge(Node* rl1, Node* rl2) {
 				iter1->_right_brother = merged[i];
 				iter1 = iter1->_right_brother;
 			}
+		}
+	}
+
+	return root_list;
+}
+
+Node* order_trees(Node* src) {
+	Node* iter = src;
+	Node* chng = nullptr;
+	Node* root_list = nullptr;
+	vector<Node*> merged(1000, nullptr);
+
+	while (iter != nullptr) {
+		chng = iter->_right_brother;
+		add_to_merged(merged, iter);
+		iter = chng;
+	}
+
+	for (size_t i = 0; i < merged.size(); ++i) {
+		if ((root_list == nullptr) && (merged[i] != nullptr)) {
+			root_list = merged[i];
+			iter = root_list;
+		}
+		else if (merged[i] != nullptr) {
+			iter->_right_brother = merged[i];
+			iter = iter->_right_brother;
 		}
 	}
 
@@ -195,7 +186,7 @@ int   get_min(Node* root_list) {
 	if (root_list == nullptr) throw;
 
 	Node* iter = root_list;
-	int   min  = iter->_key;
+	int   min = iter->_key;
 
 	while (iter->_right_brother != nullptr) {
 		iter = iter->_right_brother;
@@ -208,8 +199,8 @@ int   get_min(Node* root_list) {
 int   delete_min(Node** root_list) {
 	if (*root_list == nullptr) throw;
 
-	Node* prev     = nullptr;
-	Node* cur      = *root_list;
+	Node* prev = nullptr;
+	Node* cur = *root_list;
 	Node* min_prev = nullptr;
 	Node* min_node = *root_list;
 	int key = 0;
@@ -223,9 +214,18 @@ int   delete_min(Node** root_list) {
 		}
 	}
 
-	if (min_node == *root_list) {
+	if ((min_node == *root_list) && (min_node->_right_brother == nullptr)) {
 		Node* to_attach = min_node->_left_child;
 		grow(to_attach);
+		to_attach = order_trees(to_attach);
+		key = min_node->_key;
+		delete_node(min_node);
+		*root_list = to_attach;
+	}
+	else if ((min_node == *root_list) && (min_node->_right_brother != nullptr)) {
+		Node* to_attach = min_node->_left_child;
+		grow(to_attach);
+		to_attach = order_trees(to_attach);
 		*root_list = (*root_list)->_right_brother;
 		key = min_node->_key;
 		delete_node(min_node);
@@ -234,7 +234,8 @@ int   delete_min(Node** root_list) {
 	else {
 		min_prev->_right_brother = min_node->_right_brother;
 		grow(min_node->_left_child);
-		*root_list = merge(*root_list, min_node->_left_child);
+		Node* to_attach = order_trees(min_node->_left_child);
+		*root_list = merge(*root_list, to_attach);
 		key = min_node->_key;
 		delete_node(min_node);
 	}

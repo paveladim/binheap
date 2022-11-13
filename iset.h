@@ -2,6 +2,7 @@
 #define ISET_H
 
 #include <vector>
+#include <limits>
 #include "Node.h"
 
 using namespace std;
@@ -23,5 +24,9 @@ void  grow(Node* to_grow);
 void  add_to_merged(vector<Node*>& merged, Node* node);
 
 Node* create_heap(const vector<int> src);
+
+void emersion(Node** root_list, Node* src);
+void decrease_key(Node** root_list, Node* src, int delta);
+void delete_inner(Node** root_list, Node* src);
 
 #endif

@@ -277,3 +277,26 @@ Node* create_heap(const vector<int> src) {
 
 	return root_list;
 }
+
+void emersion(Node** root_list, Node* src) {
+	if (src == nullptr) return;
+	Node* iter = src;
+	while ((iter->_parent != nullptr) && (iter->_key < iter->_parent->_key)) {
+		int tmp = iter->_key;
+		iter->_key = iter->_parent->_key;
+		iter->_parent->_key = tmp;
+
+		iter = iter->_parent;
+	}
+}
+
+void decrease_key(Node** root_list, Node* src, int delta) {
+	if (src == nullptr) return;
+	src->_key -= min(delta, numeric_limits<int>::max() - src->_key);
+	emersion(root_list, src);
+}
+
+void delete_inner(Node** root_list, Node* src) {
+	decrease_key(root_list, src, numeric_limits<int>::max());
+	delete_min(root_list);
+}

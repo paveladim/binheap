@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <limits>
+#include <algorithm>
 #include "Node.h"
 
 using namespace std;
@@ -28,5 +29,7 @@ Node* create_heap(const vector<int> src);
 void emersion(Node** root_list, Node* src);
 void decrease_key(Node** root_list, Node* src, int delta);
 void delete_inner(Node** root_list, Node* src);
+
+int kth_stat(vector<int>& src, int order);
 
 #endif

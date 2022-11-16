@@ -300,3 +300,74 @@ void delete_inner(Node** root_list, Node* src) {
 	decrease_key(root_list, src, numeric_limits<int>::max());
 	delete_min(root_list);
 }
+
+int partition(int* arr, int lo, int hi, int idx) {
+	swap(arr[idx], arr[hi - 1]);
+	int x = arr[hi - 1];
+	int i = lo - 1;
+
+	for (int j = lo; j < hi; ++j)
+		if (arr[j] < x) {
+			++i;
+			swap(arr[j], arr[i]);
+		}
+
+	swap(arr[hi - 1], arr[i + 1]);
+	return i + 1;
+}
+
+int find_median(vector<int>& src, int lo, int hi) {
+	if ((hi - lo) % 2 == 0)
+		return src[(hi + lo) / 2 - 1];
+	else
+		return src[(hi + lo) / 2];
+}
+
+void build_medians(vector<int>& src, int lo, int hi, vector<int>& meds) {
+	vector<int> tmp(src.begin() + lo, src.begin() + hi);
+	if (hi - lo < 6) {
+		sort(tmp.begin(), tmp.end());
+		meds.push_back(find_median(tmp, 0, tmp.size()));
+		return;
+	}
+
+	for (int i = 0; i < tmp.size(); i += 5) {
+		sort(tmp.begin() + i, tmp.begin() + i + min(5, hi - lo - i));
+		meds.push_back(find_median(tmp, i, i + min(5, hi - lo - i)));
+	}
+}
+
+int select(vector<int>& src, int lo, int hi, int order) {
+	if (hi - lo == 1)
+		return src[lo];
+
+	vector<int> medians;
+	build_medians(src, lo, hi, medians);
+	int x = 0;
+
+	if (medians.size() > 1)
+		x = select(medians, 0, medians.size(), medians.size() / 2);
+	else
+		x = medians[0];
+
+	int idx = 0;
+	for (int i = lo; i < hi; ++i)
+		if (src[i] == x) {
+			idx = i;
+			break;
+		}
+
+	idx = partition(&src[0], lo, hi, idx);
+
+	if (order - 1 == idx - lo)
+		return src[order - 1 + lo];
+	if (order - 1 < idx - lo)
+		return select(src, lo, idx, order);
+	else
+		return select(src, idx + 1, hi, order - idx + lo - 1);
+}
+
+int kth_stat(vector<int>& src, int order) {
+	std::vector<int> tmp(src);
+	return select(tmp, 0, src.size(), order);
+}
